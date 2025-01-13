@@ -32,7 +32,7 @@ mboxa.restype = UINT
 ```
 
 - `argtypes`: Specifies the argument types expected by the function:
-  - `HWND`: Handle to the owner window (we use `None` here).
+  - `HWND`: Handle to the owner window.
   - `LPCSTR`: A pointer to a constant string, used for both the text of the message box and its title.
   - `UINT`: The flags that specify the behavior and appearance of the message box.
 
