@@ -36,7 +36,7 @@ mboxa.restype = UINT
   - `LPCSTR`: A pointer to a constant string, used for both the text of the message box and its title.
   - `UINT`: The flags that specify the behavior and appearance of the message box.
 
-- `restype`: Specifies that the function will return a `UINT` (the result of the message box interaction, where `6` indicates the "Yes" button was clicked).
+- `restype`: Specifies that the function will return a `UINT` (the result of the message box interaction).
 
 We then declare the arguments for the `MessageBoxA` function:
 
