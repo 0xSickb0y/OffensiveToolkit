@@ -8,5 +8,5 @@ OffensiveToolkit is a collection of custom scripts and programs designed to test
 
 ## Dev
 
-- [A simple Stager written in Rust](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Testing/stager-rs)
+- [A simple Stager written in Rust](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Dev/stager-rs)
 
