@@ -1,6 +1,6 @@
 # OffensiveToolkit
 
-OffensiveToolkit is a collection of custom scripts and programs designed to test, bypass, and experiment against security solutions.
+OffensiveToolkit is a collection of custom scripts and programs designed to test, bypass, and experiment against security solutions and core Operating System Features.
 
 ## Python
 
