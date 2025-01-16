@@ -47,7 +47,7 @@ syscall_function = syscall_type(lpAddress)
 ProcessHandle = 0xffffffffffffffff
 BaseAddress = wintypes.LPVOID(0x0)
 ZeroBits = wintypes.ULONG(0)
-RegionSize = wintypes.ULONG(1024 * 15)
+RegionSize = wintypes.ULONG(1024 * 15) # change this line
 AllocationType = MEM_COMMIT | MEM_RESERVE
 Protect = PAGE_EXECUTE_READ_WRITE
 
