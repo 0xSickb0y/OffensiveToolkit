@@ -101,7 +101,7 @@ if ptr == 0:
 
 The program executes the shellcode loaded from the `shellcode` file, performing the actions encoded within it.
 
-In this example, I used the requests module to fetch the shellcode from an HTTP server and open a reverse shell. The rest of the code remains unchanged.
+In this example, I used the `requests` module to fetch the shellcode from an HTTP server and open a reverse shell. The rest of the code remains unchanged.
 
 ```python
 import requests
