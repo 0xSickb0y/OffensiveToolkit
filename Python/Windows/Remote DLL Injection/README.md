@@ -126,14 +126,5 @@ print("[!] Started remote thread")
 
 ## Example Output
 
-
-```
-[!] ProcessHandle for PID 5824 -> 376
-[!] Allocated Memory for PID 5824, address -> 0x16bc220000
-[!] Bytes Written from C:\Users\husky\Desktop\injection.dll -> 0x16bc220000
-[!] LoadLibraryA address -> 0x7ffe4b87d040
-[!] Started remote thread
-```
-
 ![demo](https://github.com/user-attachments/assets/55e6bc21-c62f-421f-a7be-5f9726968269)
 
