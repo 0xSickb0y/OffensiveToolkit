@@ -76,7 +76,7 @@ __Windows API Function Definitions__
 
 To interact with the Windows API, the script declares and configures API functions such as `GetWindowTextA`, `CallNextHookEx`, and `GetMessageA`. Each function's argument types and return types are explicitly specified using `ctypes` for type safety and correct behavior.
 
-```ruby
+```python
 GetWindowTextA = user32.GetWindowTextA
 GetWindowTextA.argtypes = (
     wintypes.HANDLE,
