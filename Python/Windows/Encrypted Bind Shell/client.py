@@ -34,7 +34,7 @@ class BindShellClient:
 
         return private, public
 
-    def _generate_symmetric_keys(self):
+    def _generate_symmetric_key(self):
         aes_key = os.urandom(32)
         iv = os.urandom(16)
 
@@ -61,7 +61,7 @@ class BindShellClient:
     
 
     def _encrypt_message(self, message):
-        aes_key, iv = self._generate_symmetric_keys()
+        aes_key, iv = self._generate_symmetric_key()
         cipher = Cipher(algorithms.AES(aes_key), modes.CFB(iv))
         encryptor = cipher.encryptor()
         encrypted_message = encryptor.update(message.encode("utf-8")) + encryptor.finalize()
