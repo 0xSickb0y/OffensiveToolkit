@@ -4,6 +4,7 @@ OffensiveToolkit is a collection of custom scripts and programs designed to test
 
 ## Python
 - [Direct Syscalls](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Python/Windows/Direct%20Syscalls)
+- [Encrypted Bind Shell](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Python/Windows/Encrypted%20Bind%20Shell)
 - [Interacting with the WinAPI](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Python/Windows/WinAPI)
 - [Interacting with the Windows Native API](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Python/Windows/Native%20API)
 - [Keylogging a System](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Python/Windows/Keylogging%20a%20System)
