@@ -13,4 +13,4 @@ OffensiveToolkit is a collection of custom scripts and programs designed to test
 
 ## Rust
 
-- [Stager](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Rust/stager-rs)
+- [Stager](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Rust/Stager)
