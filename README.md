@@ -9,6 +9,7 @@ OffensiveToolkit is a collection of custom scripts and programs designed to test
 - [Interacting with the Windows Native API](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Python/Windows/Native%20API)
 - [Keylogging a System](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Python/Windows/Keylogging%20a%20System)
 - [Remote DLL Injection](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Python/Windows/Remote%20DLL%20Injection)
+- [Process Injection](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Python/Windows/Process%20Injection)
 
 ## Dev
 
