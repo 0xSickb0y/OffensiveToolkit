@@ -11,7 +11,6 @@ OffensiveToolkit is a collection of custom scripts and programs designed to test
 - [Remote DLL Injection](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Python/Windows/Remote%20DLL%20Injection)
 - [Process Injection](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Python/Windows/Process%20Injection)
 
-## Dev
+## Rust
 
-- [A simple Stager written in Rust](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Dev/stager-rs)
-
+- [Stager](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Rust/stager-rs)
