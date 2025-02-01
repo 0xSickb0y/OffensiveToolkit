@@ -13,4 +13,5 @@ OffensiveToolkit is a collection of custom scripts and programs designed to test
 
 ## Rust
 
+- [Password Recovery](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Rust/PasswordRecovery)
 - [Stager](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Rust/Stager)
