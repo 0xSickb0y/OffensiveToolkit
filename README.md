@@ -2,6 +2,10 @@
 
 OffensiveToolkit is a collection of custom scripts and programs designed to test, bypass, and experiment against security solutions and core Operating System Features.
 
+## C#
+
+- [Port Scanner](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Csharp/Port%20Scanner)
+
 ## Python
 - [Direct Syscalls](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Python/Windows/Direct%20Syscalls)
 - [Encrypted Bind Shell](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Python/Windows/Encrypted%20Bind%20Shell)
@@ -15,8 +19,3 @@ OffensiveToolkit is a collection of custom scripts and programs designed to test
 
 - [Password Recovery](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Rust/PasswordRecovery)
 - [Stager](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Rust/Stager)
-
-
-## C#
-
-- [Port Scanner](https://github.com/0xSickb0y/OffensiveToolkit/tree/main/Csharp/Port%20Scanner)
