@@ -25,8 +25,8 @@ This project demonstrates a password cracker that supports multiple cryptographi
 #### 1. Clone the project to your local machine:
 
 ```bash
-git clone https://github.com/yourusername/password-cracker.git
-cd password-cracker
+git clone https://github.com/0xSickb0y/OffensiveToolkit/
+cd OffensiveToolkit/Rust/PasswordRecovery
 ```
 
 #### 2. Run the project using [Cargo](https://www.rust-lang.org/tools/install):
